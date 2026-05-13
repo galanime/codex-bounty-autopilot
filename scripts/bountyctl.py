@@ -17,7 +17,7 @@ CONFIG_EXAMPLE = ROOT / "config.example.json"
 
 
 def run(args: list[str]) -> int:
-    print("+", " ".join(args))
+    print("+", " ".join(args), flush=True)
     return subprocess.call(args, cwd=ROOT.parent)
 
 
@@ -45,11 +45,11 @@ def check_gh_auth() -> tuple[bool, str]:
 def cmd_init(_: argparse.Namespace) -> int:
     if not CONFIG.exists():
         shutil.copyfile(CONFIG_EXAMPLE, CONFIG)
-        print(f"Created {CONFIG}")
+        print(f"Created {CONFIG}", flush=True)
     else:
-        print(f"Config already exists: {CONFIG}")
+        print(f"Config already exists: {CONFIG}", flush=True)
     (ROOT / "runtime").mkdir(parents=True, exist_ok=True)
-    print(f"Runtime directory ready: {ROOT / 'runtime'}")
+    print(f"Runtime directory ready: {ROOT / 'runtime'}", flush=True)
     return 0
 
 
