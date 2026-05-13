@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bounty 自动化监工台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar" aria-label="Dashboard navigation">
+        <div class="brand">
+          <div class="brand-mark">BA</div>
+          <div>
+            <h1>Bounty 自动化监工台</h1>
+            <p>Codex 赏金闭环监控</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="#overview" class="nav-link active">总览</a>
+          <a href="#work" class="nav-link">进度</a>
+          <a href="#earnings" class="nav-link">到账</a>
+          <a href="#queue" class="nav-link">队列</a>
+          <a href="#guide" class="nav-link">引导</a>
+          <a href="#activity" class="nav-link">日志</a>
+        </nav>
+        <div class="sidebar-status">
+          <span class="status-dot" id="healthDot"></span>
+          <span id="healthText">Loading state</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">24 小时工作流</p>
+            <h2>自动发现机会，人工把关提交。</h2>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" id="refreshBtn" type="button" title="刷新面板" aria-label="刷新面板">
+              <span aria-hidden="true">刷</span>
+            </button>
+            <div class="timestamp">
+              <span>更新时间</span>
+              <strong id="updatedAt">-</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="overview" id="overview" aria-label="Overview">
+          <div class="metric">
+            <span class="metric-label">已到账</span>
+            <strong id="receivedRtc">0 RTC</strong>
+            <small id="receivedUsd">约 $0.00</small>
+          </div>
+          <div class="metric">
+            <span class="metric-label">已通过待到账</span>
+            <strong id="approvedRtc">0 RTC</strong>
+            <small>已获审核认可，等待合并或发放</small>
+          </div>
+          <div class="metric">
+            <span class="metric-label">已提交待审核</span>
+            <strong id="submittedRtc">0 RTC</strong>
+            <small>已开 PR 或 claim，尚未通过</small>
+          </div>
+          <div class="metric accent">
+            <span class="metric-label">管道总额</span>
+            <strong id="pipelineRtc">0 RTC</strong>
+            <small id="pipelineUsd">潜在约 $0.00</small>
+          </div>
+        </section>
+
+        <section class="panel" id="work">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Progress</p>
+              <h3>系统完成度</h3>
+            </div>
+            <span class="pill" id="modePill">manual_confirm</span>
+          </div>
+          <div class="progress-grid">
+            <div class="progress-item">
+              <span>跟踪中</span>
+              <strong id="progressActive">0</strong>
+            </div>
+            <div class="progress-item">
+              <span>已通过</span>
+              <strong id="progressApproved">0</strong>
+            </div>
+            <div class="progress-item">
+              <span>已提交</span>
+              <strong id="progressSubmitted">0</strong>
+            </div>
+            <div class="progress-item">
+              <span>需处理</span>
+              <strong id="progressNeedsChanges">0</strong>
+            </div>
+            <div class="progress-item">
+              <span>已合并</span>
+              <strong id="progressMerged">0</strong>
+            </div>
+            <div class="progress-item">
+              <span>被拒绝</span>
+              <strong id="progressRejected">0</strong>
+            </div>
+          </div>
+          <div class="next-action">
+            <span>下一步动作</span>
+            <p id="nextAction">等待首次运行。</p>
+          </div>
+        </section>
+
+        <section class="split">
+          <div class="panel" id="earnings">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Money</p>
+                <h3>到账情况</h3>
+              </div>
+              <span class="pill" id="walletPill">wallet</span>
+            </div>
+            <div class="wallet-row">
+              <span>钱包</span>
+              <strong id="walletId">-</strong>
+            </div>
+            <div class="wallet-row">
+              <span>上次检查</span>
+              <strong id="walletChecked">-</strong>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>PR</th>
+                    <th>状态</th>
+                    <th>预期金额</th>
+                  </tr>
+                </thead>
+                <tbody id="activeItems"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" id="queue">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Queue</p>
+                <h3>候选队列</h3>
+              </div>
+              <span class="pill" id="queueCount">0</span>
+            </div>
+            <div class="queue-list" id="candidateQueue"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="activity">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Activity</p>
+              <h3>都干了什么</h3>
+            </div>
+            <span class="pill" id="activityCount">0 events</span>
+          </div>
+          <div class="activity-list" id="activityList"></div>
+        </section>
+
+        <section class="panel" id="guide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Guide</p>
+              <h3>新手引导</h3>
+            </div>
+            <span class="pill">不碰提现</span>
+          </div>
+          <div class="guide-grid">
+            <article class="guide-step">
+              <span>1</span>
+              <h4>先检查环境</h4>
+              <p>确认 Python、GitHub CLI、curl、状态文件和面板资源都可用。</p>
+              <code>python3 scripts/bountyctl.py doctor</code>
+            </article>
+            <article class="guide-step">
+              <span>2</span>
+              <h4>跑一次自动化</h4>
+              <p>系统会扫描、刷新状态，并在符合硬门槛时自动提交低风险断链修复。</p>
+              <code>python3 scripts/bountyctl.py once</code>
+            </article>
+            <article class="guide-step">
+              <span>3</span>
+              <h4>打开 24 小时循环</h4>
+              <p>放在独立终端长期运行；面板会持续展示进度、到账和阻塞项。</p>
+              <code>python3 scripts/bountyctl.py loop</code>
+            </article>
+            <article class="guide-step">
+              <span>4</span>
+              <h4>保持人工边界</h4>
+              <p>系统可以自动开 PR 和 claim，但钱包注册、提现、银行卡、税务和交易所操作必须人工处理。</p>
+              <code>external_actions = auto_submit_except_wallet_withdrawal</code>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

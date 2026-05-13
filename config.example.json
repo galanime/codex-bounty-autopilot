@@ -1,0 +1,18 @@
+{
+  "wallet_id": "",
+  "scan": {
+    "enabled": true,
+    "interval_seconds": 3600,
+    "limit": 40,
+    "issuehunt_pages": 5
+  },
+  "automation": {
+    "external_actions": "manual_confirm",
+    "max_active_items": 8,
+    "auto_pick_next": true,
+    "auto_submit_low_risk_link_fixes": false,
+    "max_auto_submits_per_run": 1
+  },
+  "workdir": "~/codex-bounty-work",
+  "active_items": []
+}

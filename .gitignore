@@ -1,0 +1,12 @@
+config.json
+runtime/
+outputs/
+candidate_review.md
+earnings_ledger.md
+ops_status.md
+scripts/submit_*.py
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
