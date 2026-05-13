@@ -21,6 +21,14 @@ def run(args: list[str]) -> int:
     return subprocess.call(args, cwd=ROOT.parent)
 
 
+def print_gh_install_help() -> None:
+    print("GitHub CLI `gh` is required.")
+    print("Install examples:")
+    print("  macOS Homebrew: brew install gh")
+    print("  Ubuntu/Debian:  sudo apt install gh")
+    print("  Other systems:  https://github.com/cli/cli#installation")
+
+
 def check_gh_auth() -> tuple[bool, str]:
     if not shutil.which("gh"):
         return False, "GitHub CLI `gh` is not installed."
@@ -98,11 +106,14 @@ def cmd_guide(_: argparse.Namespace) -> int:
         """
 Bounty Autopilot 新手引导
 
+0. 一句命令安装或更新
+   curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/main/bootstrap.sh | bash
+
 1. 先检查环境
    python3 scripts/bountyctl.py doctor
 
-2. 初始化配置
-   python3 scripts/bountyctl.py init
+2. 一键本地配置
+   python3 scripts/bountyctl.py setup
 
 3. 如果提示 GitHub 未登录，按引导登录
    python3 scripts/bountyctl.py login
@@ -160,6 +171,9 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     missing = [name for name, value in checks if value == "missing"]
     if missing:
         print(f"Missing required tools: {', '.join(missing)}")
+        if "gh" in missing:
+            print()
+            print_gh_install_help()
         return 1
     if not gh_ok:
         print("\nGitHub login is required before this workflow can create branches, PRs, or comments.")
@@ -173,9 +187,7 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
 def cmd_login(_: argparse.Namespace) -> int:
     if not shutil.which("gh"):
-        print("GitHub CLI `gh` is required.")
-        print("macOS install:")
-        print("  brew install gh")
+        print_gh_install_help()
         return 1
     ok, message = check_gh_auth()
     if ok:
@@ -213,12 +225,82 @@ def cmd_sync(args: argparse.Namespace) -> int:
     return run(command)
 
 
+def cmd_setup(args: argparse.Namespace) -> int:
+    print("Codex Bounty Autopilot setup", flush=True)
+    print("============================", flush=True)
+    cmd_init(args)
+
+    validate_code = run([sys.executable, str(ROOT / "scripts" / "validate_system.py")])
+    if validate_code != 0:
+        return validate_code
+
+    doctor_code = cmd_doctor(args)
+    if doctor_code != 0:
+        if not shutil.which("gh"):
+            print("\nInstall GitHub CLI first, then rerun:")
+            print("  python3 scripts/bountyctl.py setup")
+            return doctor_code
+        if args.no_login:
+            print("\nGitHub login was skipped. Run this when ready:")
+            print("  python3 scripts/bountyctl.py login")
+            print("  python3 scripts/bountyctl.py setup")
+            return doctor_code
+        login_code = cmd_login(args)
+        if login_code != 0:
+            print("\nLogin did not complete. After GitHub login succeeds, rerun:")
+            print("  python3 scripts/bountyctl.py setup")
+            return login_code
+        doctor_code = cmd_doctor(args)
+        if doctor_code != 0:
+            return doctor_code
+
+    if not args.no_sync_pull:
+        print("\nRestoring account state if a private sync repo exists...")
+        sync_args = argparse.Namespace(sync_command="pull", repo=args.sync_repo, owner=args.sync_owner)
+        sync_code = cmd_sync(sync_args)
+        if sync_code != 0:
+            print("No remote account state restored. This is OK for a first-time install.")
+
+    if not args.no_install_automation:
+        print("\nInstalling local Codex automations...")
+        automation_args = argparse.Namespace(interval_hours=args.interval_hours)
+        automation_code = cmd_install_automation(automation_args)
+        if automation_code != 0:
+            return automation_code
+
+    print(
+        """
+
+Setup complete.
+
+Next commands:
+  python3 scripts/bountyctl.py web --port 8787
+  python3 scripts/bountyctl.py once
+  python3 scripts/bountyctl.py loop
+
+Financial/account boundary:
+  Wallet registration, withdrawal, exchange, bank, tax, password, seed phrase,
+  private key, and verification-code actions are never automated by this setup.
+""".strip()
+    )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bounty autopilot control CLI")
     sub = parser.add_subparsers(dest="command", required=True)
 
     init = sub.add_parser("init")
     init.set_defaults(func=cmd_init)
+
+    setup = sub.add_parser("setup")
+    setup.add_argument("--no-login", action="store_true", help="Do not start GitHub login automatically; print guidance only.")
+    setup.add_argument("--no-sync-pull", action="store_true", help="Skip restoring account state from the private sync repo.")
+    setup.add_argument("--no-install-automation", action="store_true", help="Skip installing local Codex automations.")
+    setup.add_argument("--sync-repo", default="codex-bounty-autopilot-state")
+    setup.add_argument("--sync-owner", default="")
+    setup.add_argument("--interval-hours", type=int, default=1)
+    setup.set_defaults(func=cmd_setup)
 
     once = sub.add_parser("once")
     once.add_argument("--no-scan", action="store_true")

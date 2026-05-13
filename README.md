@@ -6,11 +6,31 @@
 
 ## 30 秒开始
 
+一句命令安装、更新、检查环境、引导 GitHub 登录、恢复同账号历史状态，并安装 Codex 自动化：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/main/bootstrap.sh | bash
+```
+
+如果你想把项目放到自定义目录：
+
+```bash
+export CODEX_BOUNTY_HOME="$HOME/tools/codex-bounty-autopilot"
+curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/main/bootstrap.sh | bash
+```
+
+给 Codex 的一句话：
+
+```text
+安装并初始化 codex-bounty-autopilot：自动下载仓库、检查环境、引导我完成 GitHub 登录、如果有历史状态就 sync-pull 恢复、安装 Codex 自动化；不要自动注册钱包、提现、连接交易所、配置银行卡或税务。
+```
+
+手动安装方式：
+
 ```bash
 git clone https://github.com/galanime/codex-bounty-autopilot.git
 cd codex-bounty-autopilot
-bash install.sh
-python3 scripts/bountyctl.py guide
+python3 scripts/bountyctl.py setup
 ```
 
 如果提示 GitHub 未登录：
@@ -47,13 +67,13 @@ http://127.0.0.1:8787
 ## 复用到别人的 Codex
 
 1. Clone 仓库。
-2. 运行 `bash install.sh`。
-3. 运行 `python3 scripts/bountyctl.py login` 完成 GitHub 登录。
+2. 运行 `python3 scripts/bountyctl.py setup`。
+3. 如果 setup 提示 GitHub 未登录，按提示完成 `python3 scripts/bountyctl.py login`，然后重新运行 setup。
 4. 编辑本机 `config.json`：
    - `wallet_id`: 自己的公开收款 ID。
    - `automation.external_actions`: 默认 `manual_confirm`。
    - 若确认要自动提交低风险断链修复，改为 `auto_submit_except_wallet_withdrawal`，并把 `auto_submit_low_risk_link_fixes` 设为 `true`。
-5. 运行 `python3 scripts/bountyctl.py install-automation`，把定时任务安装到本机 Codex。
+5. setup 默认会安装本机 Codex 自动化；如需重装可运行 `python3 scripts/bountyctl.py install-automation`。
 
 `config.json`、`runtime/`、`outputs/` 都被 `.gitignore` 排除，不会把个人钱包、运行记录、候选报告发布出去。
 

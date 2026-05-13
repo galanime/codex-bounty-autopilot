@@ -17,9 +17,19 @@ python3 scripts/bountyctl.py doctor
 
 ## First-Time Setup
 
+One-command bootstrap:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/main/bootstrap.sh | bash
+```
+
+This clones or updates `~/codex-bounty-autopilot`, checks the environment, guides GitHub login, restores same-account progress if available, and installs local Codex automations.
+
+Manual setup:
+
 ```bash
 cd /path/to/codex-bounty-autopilot
-bash install.sh
+python3 scripts/bountyctl.py setup
 ```
 
 For non-technical users, print the guided steps:
