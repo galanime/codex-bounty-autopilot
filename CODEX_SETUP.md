@@ -10,6 +10,15 @@ curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/mai
 
 This clones or updates `~/codex-bounty-autopilot`, checks the environment, guides GitHub login, restores same-account state if available, and installs local Codex automations.
 
+Install side effects:
+
+- Project checkout: `~/codex-bounty-autopilot`
+- Local files: `config.json` and `runtime/`
+- Codex automation files: `~/.codex/automations/bounty-autopilot-*`
+- Private account-state repository: `codex-bounty-autopilot-state`, created only after GitHub login and state sync
+
+Keep the state repository private. It may contain wallet/miner id, tracked PRs, progress, earnings estimates, and next actions.
+
 ## 2. Manual Install
 
 ```bash
@@ -92,3 +101,5 @@ Open:
 ```text
 http://127.0.0.1:8787
 ```
+
+Keep the dashboard on `127.0.0.1` or another loopback host. It exposes local workflow state and should not be served on a public network.

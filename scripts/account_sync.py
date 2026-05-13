@@ -147,7 +147,6 @@ def public_item(item: dict[str, Any]) -> dict[str, Any]:
         "bounty",
         "status",
         "url",
-        "claim_url",
         "auto_submitted_at",
     }
     return {key: item[key] for key in allowed if key in item and item[key] not in (None, "")}
@@ -221,6 +220,8 @@ def cmd_push(args: argparse.Namespace) -> int:
     readme_text = (
         "# Codex Bounty Autopilot State\n\n"
         "Private sync repository for one GitHub account. Do not make this repository public.\n\n"
+        "This repository may contain wallet/miner id, tracked PRs, progress, earnings estimates, "
+        "and next-action state. It does not contain passwords, private keys, seed phrases, or tokens.\n\n"
         f"- GitHub login: `{login}`\n"
         f"- Last sync: `{payload['synced_at']}`\n"
         f"- Tracked items: `{len(payload['tracked_items'])}`\n"

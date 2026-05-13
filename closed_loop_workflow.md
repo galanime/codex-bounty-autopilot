@@ -1,5 +1,7 @@
 # Bounty Closed-Loop Automation Workflow
 
+Advanced domain note: this document describes the internal bounty execution loop. It is not required for one-command installation, and it should not be used as a place to store private payout details, credentials, seed phrases, private keys, or personal financial records.
+
 This workflow abstracts the current RustChain bounty run into a repeatable earning loop. It is optimized for legitimate, low-risk, reviewable contributions that can actually be accepted and paid.
 
 ## Goal

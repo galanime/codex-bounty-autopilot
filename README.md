@@ -1,18 +1,32 @@
 # Codex Bounty Autopilot
 
-一个可复用的 Codex 赏金工作流：扫描公开 bounty，筛选低风险任务，运行验证，提交小型 PR，跟踪 review / merge / payout，并用中文 Web 面板监工。
+Codex Bounty Autopilot 是一个可复用的 Codex 赏金工作流：自动扫描公开 bounty，筛选低风险任务，运行验证，准备或提交小型 PR，跟踪 review / merge / payout，并提供中文 Web 面板监工。
 
-默认发布版是安全模式：下载即可扫描、监控和准备材料；只有用户配置 GitHub 登录、钱包 ID，并显式开启自动提交后，才会自动开 PR / 发 claim。钱包注册、提现、银行卡、税务、交易所操作永远不自动执行。
+默认发布版是安全模式：下载后可以扫描、监控、恢复状态和安装 Codex 自动化；只有用户完成 GitHub 登录、配置公开收款 ID，并显式开启自动提交后，才会自动开 PR 或发 claim 评论。钱包注册、提现、转账、交易所、银行卡和税务设置永远不自动执行。
 
-## 30 秒开始
-
-一句命令安装、更新、检查环境、引导 GitHub 登录、恢复同账号历史状态，并安装 Codex 自动化：
+## 一句安装
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/main/bootstrap.sh | bash
 ```
 
-如果你想把项目放到自定义目录：
+这条命令会：
+
+- 克隆或更新 `~/codex-bounty-autopilot`
+- 创建本机 `config.json` 和 `runtime/`
+- 检查 Python、GitHub CLI、curl 和 GitHub 登录状态
+- 引导用户完成 GitHub 登录
+- 尝试从私有状态仓库恢复同账号历史进度
+- 安装本机 Codex 自动化
+
+安装副作用：
+
+- 本机项目目录：`~/codex-bounty-autopilot`
+- 本机配置和运行状态：`config.json`、`runtime/`
+- 本机 Codex 自动化：`~/.codex/automations/bounty-autopilot-*`
+- 同账号状态同步仓库：`codex-bounty-autopilot-state`，默认 private
+
+自定义安装目录：
 
 ```bash
 export CODEX_BOUNTY_HOME="$HOME/tools/codex-bounty-autopilot"
@@ -25,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/galanime/codex-bounty-autopilot/mai
 安装并初始化 codex-bounty-autopilot：自动下载仓库、检查环境、引导我完成 GitHub 登录、如果有历史状态就 sync-pull 恢复、安装 Codex 自动化；不要自动注册钱包、提现、连接交易所、配置银行卡或税务。
 ```
 
-手动安装方式：
+## 手动安装
 
 ```bash
 git clone https://github.com/galanime/codex-bounty-autopilot.git
@@ -37,72 +51,56 @@ python3 scripts/bountyctl.py setup
 
 ```bash
 python3 scripts/bountyctl.py login
+python3 scripts/bountyctl.py setup
+```
+
+## 常用命令
+
+```bash
+python3 scripts/bountyctl.py setup
 python3 scripts/bountyctl.py doctor
-```
-
-运行一次：
-
-```bash
 python3 scripts/bountyctl.py once
-```
-
-启动长期循环：
-
-```bash
 python3 scripts/bountyctl.py loop
-```
-
-打开中文监工面板：
-
-```bash
 python3 scripts/bountyctl.py web --port 8787
+python3 scripts/bountyctl.py status
+python3 scripts/bountyctl.py install-automation
+python3 scripts/bountyctl.py sync-push
+python3 scripts/bountyctl.py sync-pull
+python3 scripts/bountyctl.py sync-status
 ```
 
-访问：
+Web 面板：
 
 ```text
 http://127.0.0.1:8787
 ```
 
-## 复用到别人的 Codex
+不要把 Web 面板绑定到公网地址。面板会展示本机工作流状态、公开收款 ID、PR 进度和金额估算。默认命令只监听 `127.0.0.1`。
 
-1. Clone 仓库。
-2. 运行 `python3 scripts/bountyctl.py setup`。
-3. 如果 setup 提示 GitHub 未登录，按提示完成 `python3 scripts/bountyctl.py login`，然后重新运行 setup。
-4. 编辑本机 `config.json`：
-   - `wallet_id`: 自己的公开收款 ID。
-   - `automation.external_actions`: 默认 `manual_confirm`。
-   - 若确认要自动提交低风险断链修复，改为 `auto_submit_except_wallet_withdrawal`，并把 `auto_submit_low_risk_link_fixes` 设为 `true`。
-5. setup 默认会安装本机 Codex 自动化；如需重装可运行 `python3 scripts/bountyctl.py install-automation`。
+## 自动化边界
 
-`config.json`、`runtime/`、`outputs/` 都被 `.gitignore` 排除，不会把个人钱包、运行记录、候选报告发布出去。
+允许自动化：
 
-## 同仓库同步规则
+- 扫描候选 bounty
+- 刷新 GitHub issue / PR / wallet 状态
+- 选择低风险断链修复
+- 修改小范围文档或链接问题
+- 运行验证
+- 在显式配置允许后 push 分支、打开 PR、发 claim 评论
+- 更新本地 dashboard 状态
+- 安装本机 Codex 自动化
 
-如果 GitHub 上已经存在同名仓库，后续发布必须同步到同一个仓库，不要新建重复仓库。
+不会自动化：
 
-推荐仓库名：
+- 注册钱包
+- 提现、转账、跨链桥、交易所操作
+- 银行卡、支付账户、税务设置
+- 输入账号密码、验证码、私钥、助记词、keystore
+- 高风险安全、资金或账号动作
 
-```text
-codex-bounty-autopilot
-```
+## 跨电脑同步
 
-同步策略：
-
-- 已存在 `origin`：直接 `git pull --rebase` 后提交并 `git push`。
-- 本地没有仓库但 GitHub 已存在：先 `gh repo clone OWNER/codex-bounty-autopilot`，再覆盖同步项目文件。
-- GitHub 不存在：才创建新仓库。
-
-发布时不要提交：
-
-- `config.json`
-- `runtime/`
-- `outputs/`
-- 本机钱包、收益账本、候选报告、缓存文件
-
-## 同一 GitHub 账号跨电脑同步进度
-
-项目代码仓库只放通用代码；你的完成记录、跟踪 PR、到账状态会同步到另一个**私有**状态仓库：
+代码仓库只放通用代码。个人运行状态会同步到同一 GitHub 账号下的私有仓库：
 
 ```text
 codex-bounty-autopilot-state
@@ -114,7 +112,7 @@ codex-bounty-autopilot-state
 python3 scripts/bountyctl.py sync-push
 ```
 
-新电脑登录同一个 GitHub 账号后拉回状态：
+新电脑恢复状态：
 
 ```bash
 python3 scripts/bountyctl.py login
@@ -122,98 +120,52 @@ python3 scripts/bountyctl.py sync-pull
 python3 scripts/bountyctl.py once --no-scan
 ```
 
-查看云端状态：
-
-```bash
-python3 scripts/bountyctl.py sync-status
-```
-
 同步内容包括：
 
-- `wallet_id`
+- 公开收款 ID
 - 已跟踪 PR
 - PR 状态
 - 已提交 / 已通过 / 已合并 / 已拒绝数量
 - 待到账和已到账金额
 - 下一步动作
 
-这个状态仓库默认是 private。不要把它改成 public。
+请保持状态仓库为 private。
 
-## 自动添加 Codex 自动化
+状态仓库可能包含公开收款 ID、GitHub 登录名、跟踪 PR、进度、金额估算和下一步动作。它不会保存密码、私钥、助记词、验证码或 API token。
 
-```bash
-python3 scripts/bountyctl.py install-automation --interval-hours 1
-```
+## 隐私与发布安全
 
-这会写入：
+公开仓库不会提交这些本机文件：
 
-- `~/.codex/automations/bounty-autopilot-run/automation.toml`
-- `~/.codex/automations/bounty-autopilot-monitor/automation.toml`
+- `config.json`
+- `runtime/`
+- `outputs/`
+- `candidate_review.md`
+- `earnings_ledger.md`
+- `ops_status.md`
+- `.env`
+- Python 缓存和本机临时文件
 
-如果 Codex UI 没立即显示，重启 Codex 桌面应用即可。
+`config.example.json` 是脱敏模板，默认没有钱包 ID、PR 历史或收益状态。
 
-## 登录引导
+## Codex Skill 入口
 
-这个项目需要 GitHub CLI 来读 PR、创建分支、打开 PR、发 claim 评论。
+仓库包含 [SKILL.md](SKILL.md)，Codex 可以把它当作安装和运行说明读取。关键规则是：
 
-检查：
-
-```bash
-python3 scripts/bountyctl.py doctor
-```
-
-如果未登录，系统会提示：
-
-```bash
-python3 scripts/bountyctl.py login
-```
-
-登录完成后会运行 `gh auth setup-git`，让 `git push` 可用。
-
-## 自动化边界
-
-允许自动化：
-
-- 扫描候选 bounty
-- 刷新 PR / issue / wallet 状态
-- 选择低风险断链修复
-- 修改单文件小 diff
-- 运行验证
-- push 分支
-- 打开 PR
-- 发 bounty claim 评论
-- 更新本地 dashboard 状态
-
-永远不自动化：
-
-- 注册钱包
-- 提现
-- 转账
-- 连接交易所
-- 配置银行卡、税务、支付账户
-- 输入账号密码、验证码、私钥、助记词
-
-## 主要命令
-
-```bash
-python3 scripts/bountyctl.py init
-python3 scripts/bountyctl.py doctor
-python3 scripts/bountyctl.py login
-python3 scripts/bountyctl.py once
-python3 scripts/bountyctl.py loop
-python3 scripts/bountyctl.py web --port 8787
-python3 scripts/bountyctl.py status
-python3 scripts/bountyctl.py install-automation
-python3 scripts/bountyctl.py sync-push
-python3 scripts/bountyctl.py sync-pull
-python3 scripts/bountyctl.py sync-status
-```
+- 优先使用一键 bootstrap
+- 缺 GitHub 登录时引导用户登录
+- 同账号换电脑时自动尝试 `sync-pull`
+- 默认安装 Codex 自动化
+- 严格禁止钱包、提现、交易所、银行卡、税务和密钥类自动化
 
 ## 文件结构
 
+- `bootstrap.sh`: 一句命令安装入口。
+- `SKILL.md`: Codex 可读的安装和安全边界说明。
 - `scripts/bountyctl.py`: 统一 CLI。
 - `scripts/autopilot.py`: 扫描、刷新、自动提交、记账主循环。
 - `scripts/auto_link_submitter.py`: 低风险断链修复自动提交器。
+- `scripts/account_sync.py`: 同 GitHub 账号跨电脑状态同步。
 - `scripts/install_codex_automation.py`: 安装 Codex 桌面自动化。
 - `scripts/web_dashboard.py`: 本地中文监工面板服务。
 - `web/`: dashboard 前端。

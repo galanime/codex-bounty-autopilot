@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import mimetypes
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -13,6 +14,15 @@ from runtime_state import STATE_PATH, read_state
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB_DIR = ROOT / "web"
+
+
+def is_loopback_host(host: str) -> bool:
+    if host in {"localhost", "127.0.0.1", "::1"}:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 class DashboardHandler(BaseHTTPRequestHandler):
@@ -86,7 +96,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8787)
+    parser.add_argument(
+        "--allow-public",
+        action="store_true",
+        help="Allow binding to a non-loopback address. This exposes local bounty state and is not recommended.",
+    )
     args = parser.parse_args()
+
+    if not args.allow_public and not is_loopback_host(args.host):
+        print("Refusing to bind dashboard to a non-loopback host.")
+        print("The dashboard exposes local workflow state, wallet id, PR status, and earnings estimates.")
+        print("Use --host 127.0.0.1, or pass --allow-public only if you have added your own network protection.")
+        return 2
 
     server = ThreadingHTTPServer((args.host, args.port), DashboardHandler)
     print(f"Dashboard: http://{args.host}:{args.port}")
