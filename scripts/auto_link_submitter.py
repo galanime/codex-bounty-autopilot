@@ -29,7 +29,8 @@ from runtime_state import add_activity, add_run, read_state, write_state, now_is
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = Path.home() / "codex-bounty-work"
 DEFAULT_UPSTREAM = "Scottcjn/rustchain-bounties"
-DEFAULT_BOUNTY_ISSUE = 9018
+DEFAULT_BOUNTY_REPO = "Scottcjn/rustchain-bounties"
+DEFAULT_BOUNTY_ISSUE = 444
 DEFAULT_WALLET = ""
 
 URL_REPLACEMENTS = {
@@ -381,8 +382,8 @@ def parse_pr_number(pr_url: str) -> int:
     return int(match.group(1))
 
 
-def post_claim(upstream: str, pr_url: str, candidate: Candidate, wallet: str, bounty_issue: int) -> str:
-    body = f"""Claiming this May Flowers broken-link fix.
+def post_claim(bounty_repo: str, pr_url: str, candidate: Candidate, wallet: str, bounty_issue: int) -> str:
+    body = f"""Claiming this broken-link fix.
 
 PR: {pr_url}
 RTC wallet: {wallet}
@@ -399,7 +400,7 @@ Validation:
 - `git diff --check -- {candidate.file_path}`: passed
 """
     proc = run(
-        ["gh", "issue", "comment", str(bounty_issue), "--repo", upstream, "--body", body],
+        ["gh", "issue", "comment", str(bounty_issue), "--repo", bounty_repo, "--body", body],
         timeout=60,
         check=True,
     )
@@ -409,6 +410,7 @@ Validation:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--upstream", default=DEFAULT_UPSTREAM)
+    parser.add_argument("--bounty-repo", default=DEFAULT_BOUNTY_REPO)
     parser.add_argument("--bounty-issue", type=int, default=DEFAULT_BOUNTY_ISSUE)
     parser.add_argument("--wallet", default=DEFAULT_WALLET)
     parser.add_argument("--dry-run", action="store_true")
@@ -464,7 +466,7 @@ def main() -> int:
     login = current_login()
     commit_sha = create_branch_with_file(args.upstream, login, branch, candidate, repo_dir, message)
     pr_url = open_pr(args.upstream, login, branch, candidate, args.wallet, args.bounty_issue)
-    claim_url = post_claim(args.upstream, pr_url, candidate, args.wallet, args.bounty_issue)
+    claim_url = post_claim(args.bounty_repo, pr_url, candidate, args.wallet, args.bounty_issue)
     pr_number = parse_pr_number(pr_url)
 
     auto_items = state.setdefault("auto_submitted_items", [])
@@ -477,7 +479,7 @@ def main() -> int:
             "number": pr_number,
             "title": f"Auto fix broken link in {candidate.file_path}",
             "expected_rtc": 3,
-            "bounty": f"{args.upstream}#{args.bounty_issue}",
+            "bounty": f"{args.bounty_repo}#{args.bounty_issue}",
             "claim_url": claim_url,
             "auto_submitted_at": now_iso(),
         },
